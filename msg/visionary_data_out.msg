@@ -1,0 +1,12 @@
+float32 left_pocket_x
+float32 left_pocket_y
+float32 left_pocket_z
+float32 center_point_x
+float32 center_point_y
+float32 center_point_z
+float32 right_pocket_x
+float32 right_pocket_y
+float32 right_pocket_z
+float32 angle
+float32 estimated_distance
+bool palette_found

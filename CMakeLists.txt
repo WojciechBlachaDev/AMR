@@ -74,6 +74,7 @@ add_message_files(
   scangrid_statuses.msg
   scangrid.msg
   sensors_data.msg
+  visionary_data_out.msg
   workstate_read.msg
   workstate_request.msg
 )
