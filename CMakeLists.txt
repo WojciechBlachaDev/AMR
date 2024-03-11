@@ -71,6 +71,7 @@ add_message_files(
   plc_data_out.msg
   plc_error_codes.msg
   plc_error_status.msg
+  point.msg
   scangrid_data.msg
   scangrid_statuses.msg
   scangrid.msg
