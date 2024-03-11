@@ -1,0 +1,8 @@
+lidar_out left_scanner
+lidar_out right_scanner
+bool standstill
+bool cpu_ok
+bool encoder_ok
+bool speed_ok
+bool left_emergency_stop_button
+bool right_emergency_stop_button

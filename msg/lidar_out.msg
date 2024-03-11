@@ -1,0 +1,9 @@
+bool is_active
+bool contamination_warning
+bool contamination_error
+bool reduced_speed_zone_status
+bool soft_stop_zone_status
+bool emergency_stop_zone_status
+bool app_error
+bool device_error
+bool monitoring_case_valid

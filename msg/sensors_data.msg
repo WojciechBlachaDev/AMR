@@ -1,0 +1,10 @@
+float32 tilt_axis_1
+float32 tilt_axis_2
+float32 weight
+float32 weight_saved
+float32 forks_height
+float32 battery_voltage
+float32 battery_percentage
+float32 servo_angle
+bool forks_height_limiter
+bool battery_critical

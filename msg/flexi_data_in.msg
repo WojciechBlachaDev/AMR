@@ -1,0 +1,7 @@
+lidar_in left_scanner
+lidar_in right_scanner
+bool monitoring_case_signal_a1
+bool monitoring_case_signal_a2
+bool monitoring_case_signal_b1
+bool monitoring_case_signal_b2
+bool activate_lidars

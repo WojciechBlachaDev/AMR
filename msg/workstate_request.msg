@@ -1,0 +1,16 @@
+bool select_auto_mode
+bool select_manual_mode
+bool initial_diag_complete
+bool start_navigation_ride
+bool finish_navigation_ride
+bool start_charging_sequence
+bool finish_charging_sequence
+bool start_magazine_get_palette
+bool finish_magazine_get_palette
+bool start_magazine_leave_palette
+bool finish_magazine_leave_palette
+bool start_nest_get_palette
+bool finish_nest_get_palette
+bool start_nest_leave_palette
+bool finish_nest_leave_palette
+bool reinitialize_auto_mode

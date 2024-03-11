@@ -1,0 +1,14 @@
+int32 actual_forks_height
+int32 weight
+int32 tilt_axis_1
+int32 tilt_axis_2
+int32 battery_voltage
+int32 speed_value
+int32 speed_direction
+int32 position
+int32 steering_angle
+int32 steering_direction
+int32 weight_saved
+bool forks_height_limiter
+bool base_position_saved
+bool position_reached

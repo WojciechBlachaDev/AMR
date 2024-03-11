@@ -1,0 +1,2 @@
+scangrid_data data
+scangrid_statuses status

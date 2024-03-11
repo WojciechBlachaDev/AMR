@@ -1,0 +1,12 @@
+int32 pressure_sensor
+int32 forks_height_sensor
+int32 tilt_sensor_axis_1
+int32 tilt_sensor_axis_2
+int32 battery_sensor
+int32 manual_speed_regulator
+int32 pwm_to_curtis_write
+int32 servo_position_read
+int32 servo_move
+int32 servo_halt
+int32 scangrid_left
+int32 scangrid_right

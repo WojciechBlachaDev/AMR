@@ -1,0 +1,17 @@
+int32 servo_angle
+int32 servo_direction
+int32 curtis_power
+int32 requested_distance
+int32 watchdog
+bool servo_power
+bool curtis_forward
+bool curtis_backward
+bool forks_up
+bool forks_down
+bool scangrids_activate_all
+bool scangrid_activate_left
+bool scangrids_activate_right
+bool distance_drive_start
+bool distance_drive_cancel
+bool distance_drive_reset
+bool save_weight

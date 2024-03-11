@@ -1,0 +1,5 @@
+bool reset_emergency_zone
+bool reset_soft_stop_zone
+bool reset_reduced_speed_zone
+bool reset_global
+bool reset_connection

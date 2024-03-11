@@ -1,0 +1,12 @@
+bool pressure_sensor
+bool forks_height_sensor
+bool tilt_sensor_axis_1
+bool tilt_sensor_axis_2
+bool battery_sensor
+bool manual_speed_regulator
+bool pwm_to_curtis_write
+bool servo_position_read
+bool servo_move
+bool servo_halt
+bool scangrid_left
+bool scangrid_right

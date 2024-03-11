@@ -1,0 +1,14 @@
+<launch>
+    <!-- Opdalenie paczki komunikacyjnej producenta: SICK LidarLoc2 -->
+    <include file="$(find sick_lidar_localization)/launch/sick_lidar_localization.launch"/>
+    <!-- Wlaczenie konwertera TF -->
+    <include file="$(find dhi_amr)/tf/tf_main.launch"/>
+    <!-- Odpalenie paczki komunikacyjnej producenta: SICK Microscan3 -->
+    <include file="$(find sick_safetyscanners)/launch/sensor_1.launch"/>
+    <include file="$(find sick_safetyscanners)/launch/sensor_2.launch"/>
+    <!-- Odpalenie biblioteki laczacej odczyty z dwoch skanerow Microscan3 -->
+    <include file="$(find ira_laser_tools)/launch/laserscan_multi_merger.launch"/>
+    <!-- Wlaczenie skryptu komunikacyjnego ze sterownikiem PLC Delta DVP15MC11T -->
+    <node pkg="dhi_amr" type="plc.py" name="plc" output="screen"/>
+
+</launch>

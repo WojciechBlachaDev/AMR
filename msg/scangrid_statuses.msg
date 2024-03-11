@@ -1,0 +1,11 @@
+bool safety_output
+bool protection_field_status
+bool work_status
+bool warning_field_status
+bool contamination_warning
+bool contamination_error
+bool monitoring_case_switch_input_status
+bool monitoring_case_switch_can_input_status
+bool voltage_error
+bool resistance_to_external_light_error
+bool sleep_mode_status
