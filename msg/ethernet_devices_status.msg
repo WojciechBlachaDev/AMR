@@ -1,0 +1,10 @@
+bool plc_is_avaible
+bool safety_modbus_is_avaible
+bool safety_ethernet_is_avaible
+bool microscan3_left_is_avaible
+bool microscan3_right_is_avaible
+bool visionary_is_avaible
+bool lidarloc_is_avaible
+bool lan_gateway_is_avaible
+bool wifi_gateway_is_avaible
+bool server_is_avaible

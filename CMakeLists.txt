@@ -62,6 +62,7 @@ add_message_files(
   commands_scangrids.msg
   commands_servo.msg
   encoder_data.msg
+  ethernet_devices_status.msg
   flexi_data_in.msg
   flexi_data_out.msg
   lidar_in.msg
