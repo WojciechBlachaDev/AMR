@@ -68,7 +68,7 @@ class SensorsData:
             
 if __name__ == '__main__':
     try:
-        rospy.init_node('sensors_converter')
+        rospy.init_node('sensors_converter', log_level=rospy.DEBUG)
         rospy.loginfo('Sensors converting service started!')
         sensors = SensorsData()
         rospy.spin()

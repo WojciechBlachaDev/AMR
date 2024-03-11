@@ -425,7 +425,7 @@ class PLC:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('communication_plc')
+        rospy.init_node('communication_plc', log_level=rospy.DEBUG)
         plc = PLC()
         rospy.loginfo('Communication with PLC script started')
         rospy.spin()

@@ -1,0 +1,7 @@
+<launch>
+    <!-- Wlaczenie kontrolera jazdy (curtis i servo)-->
+    <node pkg="dhi_amr" type="drive.py" name="drive" output="screen"/>
+    <!-- Wlaczenie konwertera punktu na cel nawigacyjny-->
+    <node pkg="dhi_amr" type="point_to_goal_converter.py" name="point_to_goal_converter" output="screen"/>
+    
+</launch>

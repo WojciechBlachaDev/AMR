@@ -86,7 +86,7 @@ class VisionaryConnection:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('visionary_communication')
+        rospy.init_node('visionary_communication', log_level=rospy.DEBUG)
         rospy.loginfo('Visionary communication started!')
         visionary = VisionaryConnection()
         rospy.spin()

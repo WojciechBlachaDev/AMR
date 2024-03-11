@@ -91,7 +91,7 @@ class EncoderData:
         
 if __name__ == '__main__':
     try:
-        rospy.init_node('encoder_converter')
+        rospy.init_node('encoder_converter', log_level=rospy.DEBUG)
         rospy.loginfo('Encoder converting service started!')
         encoder = EncoderData()
         rospy.spin()

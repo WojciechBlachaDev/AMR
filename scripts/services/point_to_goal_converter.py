@@ -29,9 +29,10 @@ class PointConverter:
                 """ROS Publisher's definitions"""
                 self.goal_status_pub = rospy.Publisher('amr/status/nav_ride/goal_status', Bool, queue_size=1, latch=True)
                 self.start_confirmation_pub = rospy.Publisher('amr/status/nav_ride/start', Bool, queue_size=1, latch=True)
-                self.cancel_confirmation_pub = rospy.Publisher('amr/status/navride/cancel')
+                self.cancel_confirmation_pub = rospy.Publisher('amr/status/navride/cancel', Bool, queue_size=1, latch=True)
             except Exception as e:
                 rospy.logerr(f'Error detected in point converter at main program loop: {e}')
+            self.logic()
 
     """ callback for point subscriber """
     def point_received_callback(self, msg):
@@ -58,13 +59,13 @@ class PointConverter:
         self.current_goal.target_pose.header.stamp = rospy.Time.now()
         self.current_goal.target_pose.pose.position.x = self.point_received.point_x
         self.current_goal.target_pose.pose.position.y = self.point_received.point_y
-        quaterion = tf_conversions.transformations.quaternion_from_euler(0, 0, math.radians((180 + self.point_received.point_r)))
-        self.current_goal.target_pose.pose.orientation.x = quaterion[0]
-        self.current_goal.target_pose.pose.orientation.y = quaterion[1]
-        self.current_goal.target_pose.pose.orientation.z = quaterion[2]
-        self.current_goal.target_pose.pose.orientation.w = quaterion[3]
+        quaternion = tf_conversions.transformations.quaternion_from_euler(0, 0, math.radians((180 + self.point_received.point_r)))
+        self.current_goal.target_pose.pose.orientation.x = quaternion[0]
+        self.current_goal.target_pose.pose.orientation.y = quaternion[1]
+        self.current_goal.target_pose.pose.orientation.z = quaternion[2]
+        self.current_goal.target_pose.pose.orientation.w = quaternion[3]
     
-    """ Sending goal to navigation package trought move_base"""
+    """ Sending goal to navigation package trough move_base"""
     def send_goal(self):
         self.client.wait_for_server()
         if self.client.get_state() != actionlib.GoalStatus.ACTIVE:
@@ -86,6 +87,16 @@ class PointConverter:
                 self.goal_status_pub.publish(True)
                 break
                     
+    """ Main service logic """
+    def logic(self):
+        if self.start:
+            self.start_confirmation_pub.publish(True)
+            while self.start:
+                if not self.start:
+                    break
+                time.sleep(0.1)
+            self.create_goal()
+            self.send_goal()
 
 
 if __name__ == '__main__':

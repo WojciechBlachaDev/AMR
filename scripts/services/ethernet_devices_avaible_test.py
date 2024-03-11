@@ -109,7 +109,7 @@ class EthernetTester:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('ethernet_tester')
+        rospy.init_node('ethernet_tester', log_level=rospy.DEBUG)
         rospy.loginfo('Ethernet tester started')
         test = EthernetTester()
         rospy.spin()

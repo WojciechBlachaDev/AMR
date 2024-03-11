@@ -199,7 +199,7 @@ class DriveController:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('drive_controller')
+        rospy.init_node('drive_controller', log_level=rospy.DEBUG)
         rospy.loginfo('Drive controller started.')
         drive_controller = DriveController()
         rospy.spin()

@@ -67,6 +67,7 @@ add_message_files(
   flexi_data_out.msg
   lidar_in.msg
   lidar_out.msg
+  log_messages.msg
   plc_data_in.msg
   plc_data_out.msg
   plc_error_codes.msg

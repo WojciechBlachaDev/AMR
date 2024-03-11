@@ -271,7 +271,7 @@ class ForksController:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('forks_controller')
+        rospy.init_node('forks_controller', log_level=rospy.DEBUG)
         rospy.loginfo('Forks controller started')
         forks_controller = ForksController()
         rospy.spin()

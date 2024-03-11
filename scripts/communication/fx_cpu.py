@@ -389,7 +389,7 @@ class Communication:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('communication_fx_cpu')
+        rospy.init_node('communication_fx_cpu', log_level=rospy.DEBUG)
         fx = Communication()
         rospy.loginfo('FX CPU communication: Program started')
         rospy.spin()
