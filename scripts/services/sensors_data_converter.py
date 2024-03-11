@@ -16,21 +16,25 @@ class SensorsData:
         self.data = sensors_data()
         self.plc_data = plc_data_out()
         
-        """Main loop"""
-        while not rospy.is_shutdown():
-            try:
-                """ ROS Subscriber's declarations"""
-                plc_data_sub = rospy.Subscriber('amr/plc/data_out', plc_data_out, self.plc_data_callback)
-                
-                """ ROS Publisher's declarations"""
-                self.data_pub = rospy.Publisher('amr/plc/sensors_converted', sensors_data, queue_size=self.data_queue, latch=self.data_latch)
-            except Exception as e:
-                rospy.logwarn(f'Error detected in sensors data converter service at main loop: {e}')
+        try:
+            """ ROS Subscriber's declarations"""
+            plc_data_sub = rospy.Subscriber('amr/plc/data_out', plc_data_out, self.plc_data_callback)
+            
+            """ ROS Publisher's declarations"""
+            self.data_pub = rospy.Publisher('amr/plc/sensors_converted', sensors_data, queue_size=self.data_queue, latch=self.data_latch)
+        except Exception as e:
+            rospy.logwarn(f'Error detected in sensors data converter service at main loop: {e}')
             
     def plc_data_callback(self, msg):
         action_start_time = time.time()
         self.plc_data = msg
         self.convert_data()
+        self.data.forks_height = self.plc_data.actual_forks_height
+        self.data.weight = self.plc_data.weight
+        self.data.tilt_axis_1 = self.plc_data.tilt_axis_1
+        self.data.tilt_axis_2 = self.plc_data.tilt_axis_2
+        self.data.weight_saved = self.plc_data.weight_saved
+        self.data.forks_height_limiter = self.plc_data.forks_height_limiter
         self.data_pub.publish(self.data)
         if self.log_action_duration:
             action_duration = time.time() - action_start_time

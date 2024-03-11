@@ -48,7 +48,7 @@ class Communication:
                 external_commands_sub = rospy.Subscriber('amr/commands/safety', flexi_data_in, self.external_commands_callback)
                 """ROS Publisher's definitions"""
                 self.data_out_pub = rospy.Publisher('amr/safety', flexi_data_out, queue_size=self.data_out_pub_queue, latch=self.data_out_pub_latch)
-                self.safety_status_pub = rospy.Publisher('amr/safety/overall', Bool, queue_size=self.safety_status_pub_queue, latch=self.safety_status_pub_latch)
+                self.safety_status_pub = rospy.Publisher('amr/safety/lidars_ok', Bool, queue_size=self.safety_status_pub_queue, latch=self.safety_status_pub_latch)
             except Exception as e:
                 rospy.logerr(f'Error detected in fx cpu communication at main program loop: {e}')
             if not self.fx_cpu_is_connected or self.user_options_changed:

@@ -73,12 +73,12 @@ class PLC:
                 self.workstates_active_pub = rospy.Publisher('amr/state_machine', workstate_read, queue_size=self.workstates_active_pub_queue, latch=self.workstates_active_pub_latch)
                 
                 """ Ros Subscriber's declarations"""
-                curtis_commands_sub = rospy.Subscriber('amr/commands/curtis', commands_curtis, self.curtis_commands_callback)
-                distance_drive_commands_sub = rospy.Subscriber('amr/commands/distance_drive', commands_distance_drive, self.distance_drive_commands_callback)
-                forks_commands_sub = rospy.Subscriber('amr/commands/forks', commands_forks, self.forks_commands_callback)
-                scangrids_commands_sub = rospy.Subscriber('amr/commands/scangrids', commands_scangrids, self.scangrids_commands_callback)
-                servo_commands_sub = rospy.Subscriber('amr/commands/servo', commands_servo, self.servo_commands_callback)
-                workstates_request_sub = rospy.Subscriber('amr/commands/workstate_request', workstate_request, self.workstates_request_callback)
+                curtis_commands_sub = rospy.Subscriber('amr/plc/commands/curtis', commands_curtis, self.curtis_commands_callback)
+                distance_drive_commands_sub = rospy.Subscriber('amr/plc/commands/distance_drive', commands_distance_drive, self.distance_drive_commands_callback)
+                forks_commands_sub = rospy.Subscriber('amr/plc/commands/forks', commands_forks, self.forks_commands_callback)
+                scangrids_commands_sub = rospy.Subscriber('amr/plc/commands/scangrids', commands_scangrids, self.scangrids_commands_callback)
+                servo_commands_sub = rospy.Subscriber('amr/plc/commands/servo', commands_servo, self.servo_commands_callback)
+                workstates_request_sub = rospy.Subscriber('amr/plc/commands/workstate_request', workstate_request, self.workstates_request_callback)
             except Exception as e:
                 rospy.logerr(f'Error detected in plc communication at main loop: {e}')
             if not self.plc_is_connected:
