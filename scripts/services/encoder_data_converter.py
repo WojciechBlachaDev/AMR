@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rospy, time
+from std_msgs.msg import Float32
 from dhi_amr.msg import plc_data_out, encoder_data
 
 
@@ -31,6 +32,7 @@ class EncoderData:
                 
             """ ROS Publisher's declarations"""
             self.data_pub = rospy.Publisher('amr/encoder', encoder_data, queue_size=self.data_queue, latch=self.data_latch)
+            self.speed_to_base_controller_pub = rospy.Publisher('amr/base_controller/data/speed', Float32, queue_size=1, latch=True)
         except Exception as e:
             rospy.logerr(f'Error detected in encoder data converter service at main loop: {e}')
 
@@ -40,6 +42,7 @@ class EncoderData:
         self.convert_speed_data()
         self.create_distance_data()
         self.data_pub.publish(self.data)
+        self.speed_to_base_controller_pub.publish(self.data.speed)
         if self.log_action_duration:
             action_duration = time.time() - action_start_time
             rospy.loginfo(f'Encoder data converter action duration time: {action_duration}')

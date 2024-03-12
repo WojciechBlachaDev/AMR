@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rospy, time
+from std_msgs.msg import Float32
 from dhi_amr.msg import sensors_data, plc_data_out
 
 
@@ -22,6 +23,7 @@ class SensorsData:
             
             """ ROS Publisher's declarations"""
             self.data_pub = rospy.Publisher('amr/plc/sensors_converted', sensors_data, queue_size=self.data_queue, latch=self.data_latch)
+            self.angle_to_base_controller_pub = rospy.Publisher('amr/base_controller/data/angle', Float32, queue_size=1, latch=True)
         except Exception as e:
             rospy.logwarn(f'Error detected in sensors data converter service at main loop: {e}')
             
@@ -36,6 +38,7 @@ class SensorsData:
         self.data.weight_saved = self.plc_data.weight_saved
         self.data.forks_height_limiter = self.plc_data.forks_height_limiter
         self.data_pub.publish(self.data)
+        self.angle_to_base_controller_pub.publish(self.data.servo_angle)
         if self.log_action_duration:
             action_duration = time.time() - action_start_time
             rospy.loginfo(f'Sensors data converter action duration time: {action_duration}')
