@@ -15,8 +15,8 @@ class DriveController:
         self.auto_correct_command = True
         self.curtis_queue = 1
         self.servo_queue = 1
-        self.curtis_latch = False
-        self.servo_latch = False
+        self.curtis_latch = True
+        self.servo_latch = True
         self.log_action_duration = True
         self.tilt_tolerance_axis1 = 5.0
         self.tilt_tolerance_axis2 = 5.0
@@ -96,7 +96,7 @@ class DriveController:
     
     """ Check is forklift safe to move """
     def is_forklift_safe(self):
-        if self.lidars_ok and self.emergency_buttons_check() and self.emergency_stop_check() and self.soft_stop_check():
+        if not self.lidars_ok and self.emergency_buttons_check() and self.emergency_stop_check() and self.soft_stop_check():
             return True
         return False
     
@@ -112,6 +112,8 @@ class DriveController:
     
     """ Converts angle for servo """
     def convert_angle(self, angle):
+        if angle < 0:
+            angle = -angle
         return math.trunc(round(angle, 2) * 100)
     """ Enable servo power """
     def enable_servo(self):
@@ -172,13 +174,17 @@ class DriveController:
     
     """ Execute servo move method """
     def servo_move(self, requested_angle):
+        print(requested_angle)
         if self.is_forklift_safe():
             if requested_angle != self.servo_power and requested_angle != self.servo_off:
                 angle = self.validate_servo_angle(requested_angle)
+                print(angle)
                 if angle != 9999:
                     self.servo.direction = self.set_servo_direction(angle)
+                    
                     self.servo.angle = self.convert_angle(angle)
                     self.servo.power = True
+                    print(self.servo)
                     self.servo_pub.publish(self.servo)
             if requested_angle == self.servo_power:
                 self.enable_servo()

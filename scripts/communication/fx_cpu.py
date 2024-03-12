@@ -24,6 +24,7 @@ class Communication:
         self.log_action_times = True
         self.lidar_reset_time = 3.0
         self.auto_reset_option = True
+        self.test_mode = True
 
         """Main"""
         self.fx_cpu = ModbusClient()
@@ -104,7 +105,7 @@ class Communication:
         result = self.data_out.left_scanner.contamination_error
         if result:
             return result
-        result = not self.data_out.left_scanner.monitoring_case_valid
+        result = self.data_out.left_scanner.monitoring_case_valid
         if result:
             return result
         result = self.data_out.left_scanner.app_error
@@ -116,7 +117,7 @@ class Communication:
         result = self.data_out.right_scanner.contamination_error
         if result:
             return result
-        result = not self.data_out.right_scanner.monitoring_case_valid
+        result = self.data_out.right_scanner.monitoring_case_valid
         if result:
             return result
         result = self.data_out.right_scanner.app_error
@@ -275,21 +276,21 @@ class Communication:
         action_start_time = time.time()
         bits = BitArray(16)
         bits[0] = self.data_in.monitoring_case_signal_a1
-        bits[1] = self.data_in.monitoring_case_signal_a1
-        bits[2] = self.data_in.monitoring_case_signal_a1
-        bits[3] = self.data_in.monitoring_case_signal_a1
-        bits[4] = self.data_in.monitoring_case_signal_a1
-        bits[5] = self.data_in.monitoring_case_signal_a1
-        bits[6] = self.data_in.monitoring_case_signal_a1
-        bits[7] = self.data_in.monitoring_case_signal_a1
-        bits[8] = self.data_in.monitoring_case_signal_a1
-        bits[9] = self.data_in.monitoring_case_signal_a1
-        bits[10] = self.data_in.monitoring_case_signal_a1
-        bits[11] = self.data_in.monitoring_case_signal_a1
-        bits[12] = self.data_in.monitoring_case_signal_a1
-        bits[13] = self.data_in.monitoring_case_signal_a1
-        bits[14] = self.data_in.monitoring_case_signal_a1
-        bits[15] = self.data_in.monitoring_case_signal_a1
+        bits[1] = self.data_in.monitoring_case_signal_a2
+        bits[2] = self.data_in.monitoring_case_signal_b1
+        bits[3] = self.data_in.monitoring_case_signal_b2
+        bits[4] = self.data_in.right_scanner.reset_connection
+        bits[5] = self.data_in.right_scanner.reset_global
+        bits[6] = self.data_in.left_scanner.reset_connection
+        bits[7] = self.data_in.left_scanner.reset_global
+        bits[8] = self.data_in.activate_lidars
+        bits[9] = self.data_in.right_scanner.reset_reduced_speed_zone
+        bits[10] = self.data_in.right_scanner.reset_soft_stop_zone
+        bits[11] = self.data_in.right_scanner.reset_emergency_zone
+        bits[12] = self.data_in.left_scanner.reset_reduced_speed_zone
+        bits[13] = self.data_in.left_scanner.reset_soft_stop_zone
+        bits[14] = self.data_in.left_scanner.reset_emergency_zone
+        bits[15] = False
         bits_set = [0] * 5
         bits_set[0] = self.bit_array_conversion(bits)
         if bits_set[0] is not None:
@@ -382,7 +383,7 @@ class Communication:
                 self.set_monitoring_case()
         self.write_data()
         self.publish_topics()
-        if self.log_action_times():
+        if self.log_action_times:
             sequence_duration = time.time() - sequence_start_time
             rospy.loginfo(f'FX CPU communication - communication sequence action duration time: {sequence_duration}')
         self.rate.sleep()
@@ -390,8 +391,9 @@ class Communication:
 if __name__ == '__main__':
     try:
         rospy.init_node('communication_fx_cpu', log_level=rospy.DEBUG)
-        fx = Communication()
         rospy.loginfo('FX CPU communication: Program started')
+        fx = Communication()
+        
         rospy.spin()
     except Exception as e:
         rospy.logerr(f'Error detected in fx cpu communication at main init: {e}')

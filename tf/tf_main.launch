@@ -1,0 +1,10 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="sensor_1_to_scan_broadcaster" args=" 1.105 0.35 0 1.5404 0 3.14 scan sensor_1 100"  /> 
+    <node pkg="tf" type="static_transform_publisher" name="sensor_2_to_scan_broadcaster" args=" 1.105 -0.35 0 -1.5404 0 3.14 scan sensor_2 100"  /> 
+    <node pkg="tf" type="static_transform_publisher" name="base_footprint_to_base_link" args="  0 0 0.19 0.0 0 0 base_footprint base_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 100" /> 
+    <node pkg="tf" type="static_transform_publisher" name="scan_to_scanmatcher_frame_broadcaster" args="0 0 0 0 0 0 scanmatcher_frame scan 100"  />
+    <node pkg="tf" type="static_transform_publisher" name="scanmatcher_frame_to_cart_frame_broadcaster" args="0 0 0 0 0 0 cart_frame scanmatcher_frame 100"  />
+    <node pkg="tf" type="static_transform_publisher" name="cart_frame_to_base_link_broadcaster" args="0 0 0 0 0 0 base_link cart_frame 100"  />
+    <node pkg="tf" type="static_transform_publisher" name="frame_to_mapp" args="0 0 0 0 0 0 map frame 100"  />
+</launch>

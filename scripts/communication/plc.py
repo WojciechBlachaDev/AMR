@@ -175,6 +175,8 @@ class PLC:
             self.plc_data_in.scangrid_activate_left = self.scangrids_commands.left
             self.plc_data_in.scangrids_activate_right = self.scangrids_commands.right
             self.plc_data_in.watchdog = self.watchdog()
+            print(self.plc_data_in.servo_direction)
+            print(self.servo_commands.direction)
             if self.log_actions_durations:
                 action_duration = time.time() - action_start_time
                 rospy.loginfo(f'PLC communication assign ROS data action time: {action_duration} s.')
@@ -221,19 +223,20 @@ class PLC:
             table[19] = self.workstates_requested.finish_nest_get_palette
             table[20] = self.workstates_requested.start_nest_leave_palette
             table[21] = self.workstates_requested.finish_nest_leave_palette
-            table[22] = False #Podpiac dane o zalogowaniu uzytkownika czytnikiem NFC wozka
-            table[23] = self.plc_data_in.distance_drive_start
-            table[24] = self.plc_data_in.distance_drive_reset
-            table[25] = self.plc_data_in.distance_drive_cancel
-            table[26] = self.plc_data_in.scangrid_activate_left
-            table[27] = self.plc_data_in.scangrids_activate_right
-            table[28] = self.plc_data_in.scangrids_activate_all
-            table[29] = self.plc_data_in.servo_power
-            table[30] = self.plc_data_in.curtis_forward
-            table[31] = self.plc_data_in.curtis_backward
-            table[32] = self.plc_data_in.forks_up
-            table[33] = self.plc_data_in.forks_down
-            table[34] = self.plc_data_in.save_weight
+            table[22] = False #reserved for authorized operator login status
+            table[23] = False #reserved (free signal )
+            table[24] = self.plc_data_in.distance_drive_start
+            table[25] = self.plc_data_in.distance_drive_reset
+            table[26] = self.plc_data_in.distance_drive_cancel
+            table[27] = self.plc_data_in.scangrid_activate_left
+            table[28] = self.plc_data_in.scangrids_activate_right
+            table[29] = self.plc_data_in.scangrids_activate_all
+            table[30] = self.plc_data_in.servo_power
+            table[31] = self.plc_data_in.curtis_forward
+            table[32] = self.plc_data_in.curtis_backward
+            table[33] = self.plc_data_in.forks_up
+            table[34] = self.plc_data_in.forks_down
+            table[35] = self.plc_data_in.save_weight
             """ Secure data when table value is NONE"""
             for i in range(0, len(table)):
                 if table[i] is None:
@@ -264,7 +267,8 @@ class PLC:
                 self.plc_data_out.speed_direction = table[6]
                 self.plc_data_out.steering_direction = table[7]
                 self.plc_data_out.steering_angle = table[8]
-                self.plc_data_out.weight_saved = table[9]
+                self.plc_data_out.position = table[9]
+                self.plc_data_out.weight_saved = table[10]
             if self.log_actions_durations:
                 action_duration = time.time() - action_start_time
                 rospy.loginfo(f'PLC Communication read plc registers action time: {action_duration} s.')
