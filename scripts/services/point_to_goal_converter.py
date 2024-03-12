@@ -4,6 +4,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import Bool
 from dhi_amr.msg import point
 
+
 class PointConverter:
     def __init__(self):
         """Variables"""
