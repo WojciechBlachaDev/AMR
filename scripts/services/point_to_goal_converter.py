@@ -18,6 +18,7 @@ class PointConverter:
         self.current_goal = MoveBaseGoal()
         self.start = False
         self.cancel = False
+        self.goal_was_canceled = False
 
         """Main program loop"""
         while not rospy.is_shutdown():
@@ -66,38 +67,70 @@ class PointConverter:
         self.current_goal.target_pose.pose.orientation.z = quaternion[2]
         self.current_goal.target_pose.pose.orientation.w = quaternion[3]
     
+    """ Checking is received goal is a new goal """
+    def check_is_new_goal(self):
+        check_x = self.point_received.point_x != self.point_last.point_x
+        check_y = self.point_received.point_y != self.point_last.point_y
+        check_r = self.point_received.point_r != self.point_last.point_r
+        if check_x and check_y and check_r:
+            return False
+        else:
+            self.point_last = self.point_received
+            return True
+
     """ Sending goal to navigation package trough move_base"""
     def send_goal(self):
-        self.client.wait_for_server()
+        server_check = self.client.wait_for_server(timeout=rospy.Duration(10))
         if self.client.get_state() != actionlib.GoalStatus.ACTIVE:
             self.client.send_goal(self.current_goal)
+        if not server_check:
+            print('server error')
         while True:
-            if self.cancel:
-                if self.client.get_state() == actionlib.GoalStatus.ACTIVE or self.client.get_state() == actionlib.GoalStatus.PENDING:
+            while True:
+                if self.client.get_state() == actionlib.GoalStatus.ACTIVE:
+                    rospy.logwarn("Goal was accepted")
+                    break
+            while self.cancel:
+                rospy.loginfo_once('Goal cancel')
+                try:
                     self.client.cancel_goal()
                     if self.client.get_state() == actionlib.GoalStatus.PREEMPTED:
                         self.cancel_confirmation_pub.publish(True)
                         while True:
                             if not self.cancel:
+                                rospy.loginfo('Confirmed goal cancel')
                                 self.cancel_confirmation_pub.publish(False)
+                                self.goal_was_canceled = True
                                 break
                             time.sleep(0.1)
-                            break
+                        break
+                except Exception as e:
+                    rospy.logerr(f'Cancel goal exception: {e}')
+                            
             if self.client.get_state() == actionlib.GoalStatus.SUCCEEDED:
                 rospy.loginfo('Goal reached')
                 self.goal_status_pub.publish(True)
+                break
+            if self.goal_was_canceled:
+                self.goal_was_canceled = False
                 break
                     
     """ Main service logic """
     def logic(self):
         if self.start:
+            rospy.loginfo('Point to goal: start command received')
             self.start_confirmation_pub.publish(True)
             while self.start:
                 if not self.start:
+                    rospy.loginfo('Point to goal: Start confirmation readed')
                     break
                 time.sleep(0.1)
-            self.create_goal()
-            self.send_goal()
+            if self.check_is_new_goal:
+                rospy.loginfo('Point to goal: new goal')
+                self.create_goal()
+                self.send_goal()
+            else:
+                rospy.loginfo(f'Received point {self.point_received} == {self.point_last}')
 
 
 if __name__ == '__main__':

@@ -56,7 +56,7 @@ class DriveController:
         curtis_start_time = time.time()
         self.curtis_move(self.curtis_request)
         if self.log_action_duration:
-            curtis_duration = (time.time() - curtis_start_time) / 1000
+            curtis_duration = (time.time() - curtis_start_time) * 1000
             rospy.loginfo(f'Drive controller: Curtis movement action time: {curtis_duration} ms.')
     
     """ Callback for servo request subscriber """
@@ -65,7 +65,7 @@ class DriveController:
         servo_start_time = time.time()
         self.servo_move(self.servo_request)
         if self.log_action_duration:
-            servo_duration = (time.time() - servo_start_time) / 1000
+            servo_duration = (time.time() - servo_start_time) * 1000
             rospy.loginfo(f'Drive controller: Servo movement action time: {servo_duration} ms.')
 
     """ Callback for lidars_ok signal subscriber"""

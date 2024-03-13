@@ -16,8 +16,6 @@
     <node pkg="dhi_amr" type="fx_cpu.py" name="fx_cpu" output="screen"/>
     <!-- Wlaczenie skryptu komunikacyjnego z serwisem RestAPI kamery 3D SICK Visionary T-mini-->
     <node pkg="dhi_amr" type="visionary_t_mini.py" name="visionary_t_mini" output="screen"/>
-    <!-- Wlaczenie skryptu logujacego wszelkie bledy do plikow tekstowych oraz do modulu komunikacyjnego SimpleFleetManager -->
-    <node pkg="dhi_amr" type="rospy_log_catcher.py" name="rospy_log_catcher" output="screen"/>
     <!-- Wlaczenie skryptu komunikacyjnego z SimpleFleetManager (serwer)-->
     <!-- <node pkg="dhi_amr" type="simple_fleet_manager.py" name="simple+_fleet_manager" output="screen"/> -->
 

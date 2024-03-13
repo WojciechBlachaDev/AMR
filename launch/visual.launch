@@ -1,0 +1,5 @@
+<launch>
+    <!-- Wlaczenie programu rviz wraz z domyslna konfiguracja -->
+    <node pkg="rviz" type="rviz" name="rviz" respawn="false" args="-d $(find dhi_forklift)/param_old/biuro.rviz">
+    </node>
+</launch>

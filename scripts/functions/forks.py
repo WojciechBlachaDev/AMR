@@ -19,6 +19,7 @@ class ForksController:
         self.command_publish_latch = True
         self.action_status_queue = 1
         self.action_status_latch = True
+        self.log_action_time = True
 
         """ Custom """
         self.data_safety = flexi_data_out()
@@ -36,7 +37,7 @@ class ForksController:
         self.forks_active = False
         self.lidars_ok = False
         self.action_confirmation = False
-        self.log_action_time = True
+        
 
         """ Main program loop """
         while not rospy.is_shutdown():

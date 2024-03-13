@@ -94,7 +94,7 @@ class Communication:
                     self.print_green(f'FX CPU connection status: {self.fx_cpu_is_connected}')
                     break
             if self.log_action_times:
-                action_duration = (time.time() - action_start_time) / 1000
+                action_duration = (time.time() - action_start_time) * 1000
                 rospy.loginfo(f'FX CPU communication - connect action duration time: {action_duration} ms.')
         except ValueError as e:
             rospy.logerr(f'Error detected in fx cpu communication at connect - value error: {e}')
@@ -216,7 +216,7 @@ class Communication:
         self.data_in.right_scanner.reset_global = False
         self.write_data()
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - lidar global reset action duration time: {action_duration} ms.')
 
     """Converting BitArray to write"""
@@ -226,7 +226,7 @@ class Communication:
         for bit in bit_array:
             result = (result << 1) | bit
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - bit array conversion action duration time: {action_duration} ms.')
         return result
 
@@ -238,7 +238,7 @@ class Communication:
             for item in data:
                 result.append(bin(int(item)))
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - conver to binary list action duration time: {action_duration} ms.')
         return result
 
@@ -258,7 +258,7 @@ class Communication:
             tmp_string = tmp_string + tmp_list[i]
         result = list(tmp_string)
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - process data action duration time: {action_duration} ms.')
         return result
 
@@ -269,7 +269,7 @@ class Communication:
         for i in range(0, len(data)):
             result.append(bool(int(data[i])))
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - creating bool list action duration time: {action_duration} ms.')
         return result
 
@@ -305,7 +305,7 @@ class Communication:
         else:
             rospy.logerr(f'Error detected in fx cpu communication at writing data to gateway: data set is NONE: {bits_set}')
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - write data to gmod action duration time: {action_duration} ms.')
         
 
@@ -347,14 +347,14 @@ class Communication:
                 rospy.logerr(f'Error detected in fx cpu communication at reading data from gateway: data set length < 0: {data_bool_list}')
                 self.fx_cpu_is_connected = False
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - read data from GMOD action duration time: {action_duration} ms.')
 
     """Publishing ROS topics"""
     def publish_topics(self):
         try:
             self.data_out_pub.publish(self.data_out)
-            self.safety_status_pub.publish(self.safety_status)
+            self.safety_status_pub.publish(not self.safety_status)
         except Exception as e:
             rospy.logerr(f'Error detected in fx cpu communication at publishing ROS topics: {e}')
 
@@ -366,14 +366,14 @@ class Communication:
         lidar_status = self.check_lidar_alarms()
         self.set_safety_status(lidar_status)
         if self.log_action_times:
-            action_duration = (time.time() - action_start_time) / 1000
+            action_duration = (time.time() - action_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - lidar alarm check action duration time: {action_duration} ms.')
         if lidar_status and self.auto_reset_option:
             self.lidar_reset_global()
             lidar_status = self.check_lidar_alarms()
             self.set_safety_status(lidar_status)
             if self.log_action_times:
-                action_duration = (time.time() - action_start_time) / 1000
+                action_duration = (time.time() - action_start_time) * 1000
                 rospy.loginfo(f'FX CPU communication - lidar alarm check action duration time: {action_duration} ms.')
         if not lidar_status:
             is_workstate_changed = self.check_workstate_changed()
@@ -386,7 +386,7 @@ class Communication:
         self.write_data()
         self.publish_topics()
         if self.log_action_times:
-            sequence_duration = (time.time() - sequence_start_time) / 1000
+            sequence_duration = (time.time() - sequence_start_time) * 1000
             rospy.loginfo(f'FX CPU communication - communication sequence action duration time: {sequence_duration} ms.')
         self.rate.sleep()
 

@@ -1,0 +1,4 @@
+<launch>
+    <!-- Uruchomienie skryptu przechwytujacego rospy.logxxx -->
+    <node pkg="dhi_amr" type="rospy_log_catcher.py" name="rospy_log_catcher" output="screen"/>
+</launch>

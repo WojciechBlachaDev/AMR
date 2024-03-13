@@ -10,7 +10,7 @@ class LogCatcher:
         """ Options """
         self.debug_enabled = True
         self.save_log_to_file = True
-        self.log_file_max_size = 1024
+        self.log_file_max_size = 256
         """ Custom """
         self.log = log_messages()
         
@@ -91,7 +91,7 @@ class LogCatcher:
 
     """ Checking if log directiory exists and if not - creating one"""
     def create_log_directory(self):
-        log_directory = os.path.join(os.getcwd(),'amr', 'data')
+        log_directory = os.path.join(os.getcwd(),'log', 'data')
         if not os.path.exists(log_directory):
             os.makedirs(log_directory)
 

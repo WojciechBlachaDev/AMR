@@ -81,8 +81,8 @@ class VisionaryConnection:
                 self.data.estimated_distance = self.estimate_distance()
                 self.publish_data_to_ros()
             if self.log_action_time:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'Communication visionary get visionary data from api action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) * 1000
+                rospy.loginfo(f'Communication visionary get visionary data from api action time: {action_duration} ms.')
         except Exception as e:
             rospy.logerr(f'Error detected in Visionary communication at getting data from api: {e}')
 

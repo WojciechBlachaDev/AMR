@@ -1,7 +1,28 @@
 <launch>
     <!-- Wlaczenie kontrolera jazdy (curtis i servo)-->
     <node pkg="dhi_amr" type="drive.py" name="drive" output="screen"/>
+    <!-- Konwerter polecen nawigacji na zrozumiale dla kontrolera jazdy -->
+    <node pkg="dhi_amr" type="base_controller" name="base_controller" output="screen"/>
+    <!-- Program obliczania odometrii-->
+    <node pkg="dhi_amr" type="odom_pub" name="odom_pub" output="screen"/>
     <!-- Wlaczenie konwertera punktu na cel nawigacyjny-->
-    <node pkg="dhi_amr" type="point_to_goal_converter.py" name="point_to_goal_converter" output="screen"/>
-    
+    <!-- <node pkg="dhi_amr" type="point_to_goal_converter.py" name="point_to_goal_converter" output="screen"/> -->
+    <!-- Wlaczenie serwera mapy i wczytanie mapy -->
+    <node pkg="map_server" name="map_server" type="map_server" args="$(find dhi_forklift)/maps/MapaHaliV3_5cm.yaml"/>
+    <!-- Parametryzacja i odpalenie modulu nawigacyjnego wraz z TEB Local Planner -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find dhi_amr)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find dhi_amr)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find dhi_amr)/param/local_costmap_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find dhi_amr)/param/global_costmap_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find dhi_amr)/param/teb_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find dhi_amr)/param/move_base_params.yaml" command="load" />
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <param name="planner_frequency" value="0.50" />
+        <param name="planner_patience" value="5.0" />
+        <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+        <param name="controller_frequency" value="2.0" />
+        <param name="controller_patience" value="5.0" />
+        <param name="clearing_rotation_allowed" value="false" /> 
+    </node> 
 </launch>
