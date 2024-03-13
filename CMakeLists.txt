@@ -77,6 +77,12 @@ add_message_files(
   scangrid_statuses.msg
   scangrid.msg
   sensors_data.msg
+  simple_commands.msg
+  simple_confirmations.msg
+  simple_in.msg
+  simple_out.msg
+  task_data.msg
+  teb_config.msg
   visionary_data_out.msg
   workstate_read.msg
   workstate_request.msg

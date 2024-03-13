@@ -1,0 +1,12 @@
+simple_confirmations confirmations
+encoder_data encoder
+ethernet_devices_status ethernet
+flexi_data_out flexi
+log_messages log
+plc_data_out plc
+scangrid scangrids
+sensors_data sensors
+task_data task
+teb_config teb
+visionary_data_out visionary
+workstate_read workstates
