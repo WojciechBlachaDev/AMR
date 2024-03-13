@@ -28,6 +28,8 @@ class LogCatcher:
             
         except Exception as e:
             rospy.logerr(f'Error detected in log catcher at init: {e}')
+        except KeyboardInterrupt as e:
+                rospy.logwarn(f'User stop detected in LOG CATCHER!')
 
     """ Callback section for log subscriber"""
     def received_log_callback(self, msg):

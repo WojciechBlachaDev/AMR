@@ -26,6 +26,7 @@ class PLC:
         self.plc_connection_timeout = 0.5
         self.plc_connection_retry_timeout = 10.0
         self.log_actions_durations = True
+        self.refresh_rate = 30
 
         """ Custom messages """
 
@@ -50,7 +51,7 @@ class PLC:
         self.plc_port = 502
         self.plc_is_connected = False
         self.plc = ModbusClient()
-        self.refresh_rate = rospy.Rate(30)
+        self.refresh_rate = rospy.Rate(self.refresh_rate)
         self.pwm_value = 0
         self.servo_angle  = 0
         self.servo_direction = 0
@@ -132,8 +133,8 @@ class PLC:
                     self.print_green(f'PLC connection status: {self.plc_is_connected}')
                     break
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'Plc communication connect method action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'Plc communication connect method action time: {action_duration} ms.')
         except ValueError as e:
             rospy.logfatal(f'Error detected in plc communication at connect method - Value Error: {e}')
         except Exception as e:
@@ -150,8 +151,8 @@ class PLC:
         else:
             rospy.logfatal(f'Error detected in plc communication at watchdog method - watchdog value should be 1 or 2. Current value: {self.plc_watchdog_old}')
         if self.log_actions_durations:
-            action_duration = time.time() - action_start_time
-            rospy.loginfo(f'PLC communication watchdog generation action time: {action_duration} s.')
+            action_duration = (time.time() - action_start_time) / 1000
+            rospy.loginfo(f'PLC communication watchdog generation action time: {action_duration} ms.')
         return self.plc_watchdog
 
     """Assign values from ROS to PLC data """
@@ -178,10 +179,12 @@ class PLC:
             print(self.plc_data_in.servo_direction)
             print(self.servo_commands.direction)
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC communication assign ROS data action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC communication assign ROS data action time: {action_duration} ms.')
         except Exception as e:
             rospy.logerr(f'Error detected in plc communication at assigning ros data: {e}')
+        except KeyboardInterrupt as e:
+                rospy.logwarn(f'User stop detected in PLC communication !')
     
     """ Writing data to plc registers """
     def write_plc_registers(self):
@@ -195,8 +198,8 @@ class PLC:
             table[98] = self.plc_data_in.watchdog
             status = self.plc.write_multiple_registers(100, table)
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC Communication write plc registers action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC Communication write plc registers action time: {action_duration} ms.')
             if not status:
                 rospy.logerr(f'Error detected in plc communication at writing plc registers - write status: {status}')
                 self.plc_is_connected = False
@@ -243,8 +246,8 @@ class PLC:
                     table[i] = False
             status = self.plc.write_multiple_coils(41120, table)
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC Communication write plc virtual inputs action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC Communication write plc virtual inputs action time: {action_duration} ms.')
             if not status:
                 rospy.logerr(f'Error detected in plc communication at writing plc virtual inputs - write status: {status}')
                 self.plc_is_connected = False
@@ -270,8 +273,8 @@ class PLC:
                 self.plc_data_out.position = table[9]
                 self.plc_data_out.weight_saved = table[10]
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC Communication read plc registers action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC Communication read plc registers action time: {action_duration} ms.')
             if table is None:
                 rospy.logerr(f'Error detected in plc communication at reading plc registers - table status is None')
                 self.plc_is_connected = False
@@ -298,8 +301,8 @@ class PLC:
                 rospy.logerr(f'Error detected in plc communication at reading plc scangrid list - table is NONE')
                 self.plc_is_connected = False
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC communication read plc scangrids data action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC communication read plc scangrids data action time: {action_duration} ms.')
         except Exception as e:
             rospy.logerr(f'Error detected in plc communication at reading plc scangrids data: {e}')
             self.plc_is_connected = False
@@ -364,8 +367,8 @@ class PLC:
                 rospy.logerr(f'Error detected in plc communication at reading virtual digital outputs - list is NONE')
                 self.plc_is_connected = False
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC communication read plc virtual digital outputs action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC communication read plc virtual digital outputs action time: {action_duration} ms.')
         except Exception as e:
             rospy.logerr(f'Error detected in plc communication at reading virtual outputs: {e}')
             self.plc_is_connected = False
@@ -392,8 +395,8 @@ class PLC:
                 rospy.logerr(f'Error detected in plc communication at reading plc error registers = list is NONE')
                 self.plc_is_connected = False
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time
-                rospy.loginfo(f'PLC communication read plc virtual digital outputs action time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC communication read plc virtual digital outputs action time: {action_duration} ms.')
         except Exception as e:
             rospy.logerr(f'Error detected in plc communication at reading plc error registers: {e}')
             self.plc_is_connected = False
@@ -420,8 +423,8 @@ class PLC:
             self.write_plc_registers()
             self.write_plc_virtual_digital_inputs()
             if self.log_actions_durations:
-                action_duration = time.time() - action_start_time 
-                rospy.loginfo(f'PLC communication overall time: {action_duration} s.')
+                action_duration = (time.time() - action_start_time) / 1000
+                rospy.loginfo(f'PLC communication overall time: {action_duration} ms.')
             self.refresh_rate.sleep()
             # os.system('clear')
         except Exception as e:

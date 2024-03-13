@@ -56,8 +56,8 @@ class DriveController:
         curtis_start_time = time.time()
         self.curtis_move(self.curtis_request)
         if self.log_action_duration:
-            curtis_duration = time.time() - curtis_start_time
-            rospy.loginfo(f'Drive controller: Curtis movement action time: {curtis_duration} s.')
+            curtis_duration = (time.time() - curtis_start_time) / 1000
+            rospy.loginfo(f'Drive controller: Curtis movement action time: {curtis_duration} ms.')
     
     """ Callback for servo request subscriber """
     def servo_request_callback(self, msg):
@@ -65,8 +65,8 @@ class DriveController:
         servo_start_time = time.time()
         self.servo_move(self.servo_request)
         if self.log_action_duration:
-            servo_duration = time.time() - servo_start_time
-            rospy.loginfo(f'Drive controller: Servo movement action time: {servo_start_time} s.')
+            servo_duration = (time.time() - servo_start_time) / 1000
+            rospy.loginfo(f'Drive controller: Servo movement action time: {servo_duration} ms.')
 
     """ Callback for lidars_ok signal subscriber"""
     def lidars_ok_callback(self, msg):
@@ -102,9 +102,9 @@ class DriveController:
     
     """ Validate and eventually reduce requested turn angle of servomotor"""
     def validate_servo_angle(self, angle):
-        if angle > self.servo_angle_limit:
+        if angle >= self.servo_angle_limit:
             return self.servo_angle_limit
-        if angle < -self.servo_angle_limit:
+        if angle <= -self.servo_angle_limit:
             return -self.servo_angle_limit
         if -self.servo_angle_limit < angle < self.servo_angle_limit:
             return angle
@@ -211,5 +211,7 @@ if __name__ == '__main__':
         rospy.spin()
     except Exception as e:
         rospy.logerr(f'Exception detected in drive controller at initialize: {e}')
+    except KeyboardInterrupt as e:
+        rospy.logwarn(f'User keyboard interrupt: {e}')
     finally:
         rospy.logwarn('Drive controller shuted down!!!')

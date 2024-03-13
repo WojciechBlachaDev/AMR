@@ -35,6 +35,8 @@ class EncoderData:
             self.speed_to_base_controller_pub = rospy.Publisher('amr/base_controller/data/speed', Float32, queue_size=1, latch=True)
         except Exception as e:
             rospy.logerr(f'Error detected in encoder data converter service at main loop: {e}')
+        except KeyboardInterrupt as e:
+                rospy.logwarn(f'User stop detected in encoder data converter !')
 
     def plc_data_callback(self, msg):
         action_start_time = time.time()

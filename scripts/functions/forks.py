@@ -265,8 +265,8 @@ class ForksController:
                 status = None
                 self.command_received_last = self.command_received
         if self.log_action_time:
-            sequence_duration = time.time() - sequence_start_time
-            rospy.loginfo(f'Fork controller action time: {sequence_duration} s.')
+            sequence_duration = (time.time() - sequence_start_time) / 1000
+            rospy.loginfo(f'Fork controller action time: {sequence_duration} ms.')
 
 
 if __name__ == '__main__':

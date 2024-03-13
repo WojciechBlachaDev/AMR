@@ -33,6 +33,8 @@ class VisionaryConnection:
                 self.data_pub = rospy.Publisher('amr/visionary/data', visionary_data_out, queue_size=self.data_queue, latch=self.data_latch)
             except Exception as e:
                 rospy.logerr(f'Error detected in Visionary communication at main loop: {e}')
+            except KeyboardInterrupt as e:
+                rospy.logwarn(f'User stop detected in Visionary communication !')
             rospy.loginfo_once(self.api_link)
 
     """ ROS topic's callbacks """
