@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import rospy, time, netifaces, signal, math, socket
-from socket import socket as sock
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Int64, Float32
 from dhi_amr.msg import simple_in
@@ -13,37 +12,30 @@ from dhi_amr.msg import visionary_data_out, workstate_read
 
 """ Server setting class """
 class Server:
-
     """ Server initialization """
     def __init__(self, host, port):
-        try:
-            self.server_socket = sock(socket.AF_INET, socket.SOCK_STREAM)
-            self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.server_socket.bind(host, port)
-            self.server_socket.listen(5)
-            rospy.logdebug(f'AMR_SERVER: Server started now!')
-        except (Exception, socket.error) as e:
-            if e.errno == socket.errno.EADDRINUSE:
-                rospy.logwarn(f'Port or address already in use: {e}. Retrying server startup after 5 seconds..')
-            else:
-                rospy.logfatal(f'AMR SERVER: Server startup failed: {e}')
+        self.host = host
+        self.port = port
+        self.server_socket = None
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.bind((host, port))
+        self.server_socket.listen(5)
 
     """ Accepting client method """
     def accept_connection(self):
-        client = None
+        client_socket = None
         try:
-            client, addr = self.server_socket.accept()
+            client_socket, addr = self.server_socket.accept()
             rospy.loginfo(f'AMR SERVER: Connection accepted from -  {addr[0]}:{addr[1]}')
-        except socket.error as e:
-            if e.errno == socket.errno.EINVAL:
-                rospy.logwarn(f'AMR SERVER: Invalid argument while connecting client to server: {e}. Ignoring and continuing now....')
-            else:
-                rospy.logerr(f'AMR SERVER: Error while accepting connection from client: {e}')
-        return client
+        except Exception as e:
+            rospy.logerr(f'AMR SERVER: Error while accepting connection from client: {e}')
+        return client_socket
 
     """ Server closing method """
     def close(self):
-        self.server_socket.close()
+        if self.server_socket:
+            self.server_socket.close()
 
 
 """ Data exchange handling class """
@@ -54,16 +46,17 @@ class ConnectionHandler:
         """ Variables """
         """ options """
         self.server_startup = True
-        self.interface_name = 'wlp0s20f3'
+        # self.interface_name = 'wlp0s20f3'
+        self.interface_name = 'eno1'
         self.server_address = self.get_my_ip(self.interface_name)
         self.server_port = 2137
         self.server_refresh_rate = 30
         self.data_in_queue = 1
         self.data_in_latch = True
         """ Connection """
-        self.client = sock(socket.AF_INET, socket.SOCK_STREAM)
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # self.server = Server(self.server_address, self.server_port)
+        self.server = Server(self.server_address, self.server_port)
 
         """ Others """
         self.rate = rospy.Rate(self.server_refresh_rate)
@@ -449,6 +442,21 @@ class ConnectionHandler:
             for i in range(7):
                 data.append(0)
         return data
+    
+    """ Creating log data table method"""
+    def create_log_data(self, data):
+        try:
+            data.append(self.log.date)
+            data.append(self.log.level)
+            data.append(self.log.node_name)
+            data.append(self.log.message)
+            data.append(self.log.code_line)
+            data.append(self.log.file)
+        except Exception as e:
+            rospy.logerr(f'AMR SERVER: Error while creating log data table: {e}')
+            for i in range(6):
+                data.append(0)
+        return data
 
     """ Creating confirmations data table method """
     def create_confirmations_data(self, data):
@@ -507,6 +515,8 @@ class ConnectionHandler:
             data = self.create_actual_teb_config_data(data)
             data.append('&')
             data = self.create_actual_task_data(data)
+            data.append('&')
+            data = self.create_log_data(data)
 
         except Exception as e:
             rospy.logfatal(f'AMR SERVER: Error in get data to send method: {e}. Creating empty table')
@@ -515,8 +525,9 @@ class ConnectionHandler:
     """ Sending message trought TCP/IP protocol method """
     def send_data(self, message):
         try:
-            byte_to_send = bytes(message + '$' + 'utf-8')
+            byte_to_send = bytes(message + '$', 'utf-8')
             self.client.send(byte_to_send)
+            rospy.logdebug(byte_to_send)
         except Exception as e:
             rospy.logwarn(f'AMR SERVER: Send bytes error - {e}. Starting reconnect method!')
             self.reconnect_client()
@@ -608,22 +619,22 @@ class ConnectionHandler:
         if self.log_action_time:
             action_duration = (time.time() - action_start_time) * 1000
             rospy.logdebug(f'AMR SERVER: Send data action time: {action_duration} ms.')
-        action_start_time = time.time()
-        message_received = self.read_data()
-        if message_received is not None:
-            commands, task = self.decode_and_split_data(message_received)
-            if commands is not None:
-                self.set_commands(commands)
-            if task is not None:
-                self.set_task(task)
-            self.publish_message()
-            if self.log_action_time:
-                action_duration = (time.time() - action_start_time) * 1000
-                rospy.logdebug(f'AMR SERVER: Read data and publish action time: {action_duration} ms.')
+        # action_start_time = time.time()
+        # message_received = self.read_data()
+        # if message_received is not None:
+        #     commands, task = self.decode_and_split_data(message_received)
+        #     if commands is not None:
+        #         self.set_commands(commands)
+        #     if task is not None:
+        #         self.set_task(task)
+        #     self.publish_message()
+        #     if self.log_action_time:
+        #         action_duration = (time.time() - action_start_time) * 1000
+        #         rospy.logdebug(f'AMR SERVER: Read data and publish action time: {action_duration} ms.')
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('simple_fleet_manager')
+        rospy.init_node('simple_fleet_manager', log_level=rospy.DEBUG)
         connection_handler = ConnectionHandler()
         rospy.spin()
     except Exception as e:
