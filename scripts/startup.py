@@ -19,6 +19,7 @@ class SettingsHandler():
             return False
         else:
             return True
+
     def create_file(self, file_path):
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok = True)
@@ -38,10 +39,7 @@ class SettingsHandler():
         except OSError as e:
             rospy.logfatal(f'AMR(SettingsHandler) - save settings error: {e}')
             return False
-    
-    def get_default_settings(self):
-        return self.default_settings
-        
+
     def validate_settings(self, settings):
         expected_keys = ["process_options_max_retries",
             "process_options_interval",
@@ -68,8 +66,7 @@ class AMR:
         self.settings_handler = SettingsHandler()
         if not self.settings_handler.check_file(self.file_path):
             self.settings_handler.create_file(self.file_path)
-        self.default = self.settings_handler.get_default_settings()
-        self.settings_handler.save_settings(self.file_path, self.default)
+        
         '''Variables - user options'''
         self.log_action_time = True
         self.process_options_timeout = 10.0
@@ -78,7 +75,7 @@ class AMR:
         self.workstates_requests_queue_size = 1
         self.workstates_requests_latch = True
         self.refresh_rate = 10
-    
+
         '''Variables - common'''
         self.package = 'dhi_amr'
         self.communication_file = 'communication.launch'
