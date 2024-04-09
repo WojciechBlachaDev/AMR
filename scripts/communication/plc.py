@@ -102,6 +102,7 @@ class PLC:
 
     def servo_commands_callback(self, msg):
         self.servo_commands = msg
+        rospy.logwarn(self.servo_commands)
 
     def workstates_request_callback(self, msg):
         self.workstates_requested = msg

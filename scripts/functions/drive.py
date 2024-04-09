@@ -10,7 +10,7 @@ class DriveController:
 
         """Options"""
         self.curtis_min_pwm = 360
-        self.curtis_max_pwm = 2000
+        self.curtis_max_pwm = 3999
         self.servo_angle_limit = 90.0
         self.auto_correct_command = True
         self.curtis_queue = 1
@@ -96,7 +96,7 @@ class DriveController:
     
     """ Check is forklift safe to move """
     def is_forklift_safe(self):
-        if not self.lidars_ok and self.emergency_buttons_check() and self.emergency_stop_check() and self.soft_stop_check():
+        if self.lidars_ok and self.emergency_buttons_check() and self.emergency_stop_check() and self.soft_stop_check():
             return True
         return False
     

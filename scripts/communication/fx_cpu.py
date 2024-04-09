@@ -24,7 +24,7 @@ class Communication:
         self.log_action_times = True
         self.lidar_reset_time = 3.0
         self.auto_reset_option = True
-        self.test_mode = True
+        self.test_mode = False
 
         """Main"""
         self.fx_cpu = ModbusClient()

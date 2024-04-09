@@ -9,7 +9,7 @@ class LogCatcher:
         """ Variables """
         """ Options """
         self.debug_enabled = True
-        self.save_log_to_file = True
+        self.save_log_to_file = False
         self.log_file_max_size = 256
         """ Custom """
         self.log = log_messages()
@@ -17,8 +17,8 @@ class LogCatcher:
         """ Others """
         self.received_log = Log()
         self.last_received_log = Log()
-        self.create_log_directory()
-        self.set_file_handling()
+        # self.create_log_directory()
+        # self.set_file_handling()
         try:
             """ ROS Subscriber definition """
             received_log_sub = rospy.Subscriber('rosout_agg', Log, self.received_log_callback)
@@ -36,9 +36,9 @@ class LogCatcher:
         self.received_log = msg
         is_new = self.is_log_new(self.received_log)
         if is_new:
-            if self.save_log_to_file:
-                self.create_log_line()
-                self.check_file_size()
+            # if self.save_log_to_file:
+            #     self.create_log_line()
+            #     self.check_file_size()
             self.create_published_topic()
             self.log_pub.publish(self.log)
             self.last_received_log == self.received_log
