@@ -9,11 +9,11 @@
     <!-- Odpalenie biblioteki laczacej odczyty z dwoch skanerow Microscan3 -->
     <include file="$(find ira_laser_tools)/launch/laserscan_multi_merger.launch"/>
     <!-- Wlaczenie skryptu komunikacyjnego ze sterownikiem PLC Delta DVP15MC11T -->
-    <node pkg="dhi_amr" type="plc.py" name="plc" output="screen"/>
+    <node pkg="dhi_amr" type="plc.py" name="plc" />
     <!-- Wlaczenie skryptu konwertujacego odczyt danych z plc-->
-    <node pkg="dhi_amr" type="sensors_data_converter.py" name="sensors_data_converter" output="screen"/>
+    <node pkg="dhi_amr" type="sensors_data_converter.py" name="sensors_data_converter"/>
     <!-- Wlaczenie skryptu komunikacyjnego ze sterownikiem bezpieczenstwa - brama Modbus-->
-    <node pkg="dhi_amr" type="fx_cpu.py" name="fx_cpu" output="screen"/>
+    <node pkg="dhi_amr" type="fx_cpu.py" name="fx_cpu" />
     <!-- Wlaczenie skryptu komunikacyjnego z serwisem RestAPI kamery 3D SICK Visionary T-mini-->
     <!-- <node pkg="dhi_amr" type="visionary_t_mini.py" name="visionary_t_mini" output="screen"/> -->
     <!-- Wlaczenie skryptu komunikacyjnego z SimpleFleetManager (serwer)-->
