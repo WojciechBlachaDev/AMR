@@ -1,0 +1,29 @@
+{
+    "startup_program_options": {
+        "process_options_timeout": 10.0,
+        "process_options_max_retries": 3,
+        "process_options_interval": 1.0,
+        "log_action_time": true,
+        "workstates_requests_queue_size": 1,
+        "workstates_requests_latch": true,
+        "refresh_rate": 10
+    },
+    "plc_program_options": {
+        "plc_data_out_pub_queue": 1,
+        "plc_error_statuses_pub_queue": 1,
+        "plc_error_codes_pub_queue": 1,
+        "scangrid_left_pub_queue": 1,
+        "scangrid_right_pub_queue": 1,
+        "workstates_active_pub_queue": 1,
+        "plc_data_out_pub_latch": true,
+        "plc_error_statuses_pub_latch": true,
+        "plc_error_codes_pub_latch": true,
+        "scangrid_left_pub_latch": true,
+        "scangrid_right_pub_latch": true,
+        "workstates_active_pub_latch": true,
+        "plc_connection_timeout": 0.5,
+        "plc_connection_retry_timeout": 10.0,
+        "log_actions_durations": true,
+        "refresh_rate": 30
+    }
+}

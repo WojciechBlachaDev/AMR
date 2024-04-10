@@ -1,32 +1,121 @@
 #!/usr/bin/env python3
-import rospy, time, threading, os
+import rospy, time, threading, os, json, traceback
 from pyModbusTCP.client import ModbusClient
 from dhi_amr.msg import plc_data_in, plc_data_out, plc_error_codes, plc_error_status
 from dhi_amr.msg import workstate_read, workstate_request, scangrid
 from dhi_amr.msg import commands_curtis, commands_distance_drive, commands_forks, commands_scangrids, commands_servo
 
 
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "plc_program_options" ,{
+            "plc_data_out_pub_queue": 1,
+            "plc_error_statuses_pub_queue": 1,
+            "plc_error_codes_pub_queue": 1,
+            "scangrid_left_pub_queue": 1,
+            "scangrid_right_pub_queue": 1,
+            "workstates_active_pub_queue": 1,
+            "plc_data_out_pub_latch": True,
+            "plc_error_statuses_pub_latch": True,
+            "plc_error_codes_pub_latch": True,
+            "scangrid_left_pub_latch": True,
+            "scangrid_right_pub_latch": True,
+            "workstates_active_pub_latch": True,
+            "plc_connection_timeout": 0.5,
+            "plc_connection_retry_timeout": 10.0,
+            "log_actions_durations": True,
+            "refresh_rate": 10
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('PLC(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'PLC(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "plc_program_options" in settings:
+                    startup_settings = settings["plc_program_options"]
+                    rospy.logdebug('PLC(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('PLC(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('PLC(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('PLC(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'PLC(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "plc_program_options" in settings:
+                settings["plc_program_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('PLC(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('PLC(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'PLC(SettingsHandler) - update settings: Error detected: {e}')
+
+    def save_settings(self, file_path, settings):
+        try:
+            if self.validate_settings_keys(settings):
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                rospy.logdebug('PLC(SettingsHandler) - save settings: SUCCESS')
+                return True
+            return False
+        except OSError as e:
+            rospy.logfatal(f'PLC(SettingsHandler) - save settings: Error: {e}')
+            return False
+
 class PLC:
     def __init__(self):
         """ Variables declarations """
         """ Options """
-
-        self.plc_data_out_pub_queue = 1
-        self.plc_error_statuses_pub_queue = 1
-        self.plc_error_codes_pub_queue = 1
-        self.scangrid_left_pub_queue = 1
-        self.scangrid_right_pub_queue = 1
-        self.workstates_active_pub_queue = 1
-        self.plc_data_out_pub_latch = True
-        self.plc_error_statuses_pub_latch = True
-        self.plc_error_codes_pub_latch = True
-        self.scangrid_left_pub_latch = True
-        self.scangrid_right_pub_latch = True
-        self.workstates_active_pub_latch = True
-        self.plc_connection_timeout = 0.5
-        self.plc_connection_retry_timeout = 10.0
-        self.log_actions_durations = True
-        self.refresh_rate = 30
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
+        self.plc_data_out_pub_queue = self.settings.get('plc_data_out_pub_queue', 1)
+        self.plc_error_statuses_pub_queue = self.settings.get('plc_error_statuses_pub_queue', 1)
+        self.plc_error_codes_pub_queue = self.settings.get('plc_error_codes_pub_queue', 1)
+        self.scangrid_left_pub_queue = self.settings.get('scangrid_left_pub_queue', 1)
+        self.scangrid_right_pub_queue = self.settings.get('scangrid_right_pub_queue', 1)
+        self.workstates_active_pub_queue = self.settings.get('workstates_active_pub_queue', 1)
+        self.plc_data_out_pub_latch = self.settings.get('plc_data_out_pub_latch', True)
+        self.plc_error_statuses_pub_latch = self.settings.get('plc_error_statuses_pub_latch', True)
+        self.plc_error_codes_pub_latch = self.settings.get('plc_error_codes_pub_latch', True)
+        self.scangrid_left_pub_latch = self.settings.get('scangrid_left_pub_latch', True)
+        self.scangrid_right_pub_latch = self.settings.get('scangrid_right_pub_latch', True)
+        self.workstates_active_pub_latch = self.settings.get('workstates_active_pub_latch', True)
+        self.plc_connection_timeout = self.settings.get('plc_connection_timeout', 0.5)
+        self.plc_connection_retry_timeout = self.settings.get('plc_connection_retry_timeout', 10.0)
+        self.log_actions_durations = self.settings.get('log_actions_durations', True)
+        self.refresh_rate = self.settings.get('refresh_rate', 30)
 
         """ Custom messages """
 

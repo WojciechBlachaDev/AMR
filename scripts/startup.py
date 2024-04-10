@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import rospy, subprocess, time, os, json
+import rospy, subprocess, time, os, json, traceback 
 from dhi_amr.msg import workstate_read, workstate_request, simple_in, task_data
 
 class SettingsHandler():
     def __init__(self):
-        self.default_settings = {
+        self.default_settings = "startup_progrma_options" ,{
             "process_options_timeout": 10.0,
             "process_options_max_retries": 3,
             "process_options_interval": 1.0,
@@ -15,66 +15,108 @@ class SettingsHandler():
         }
 
     def check_file(self, file_path):
-        if not os.path.exists(file_path):
-            return False
-        else:
-            return True
+        return os.path.exists(file_path)
 
     def create_file(self, file_path):
         try:
-            os.makedirs(os.path.dirname(file_path), exist_ok = True)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(file_path, 'w') as file:
                 pass
-            rospy.logdebug('AMR(SettingsHandler) - create file path: Fiel path created')
+            rospy.logdebug('AMR(SettingsHandler) - create file path: File path created')
             return True
         except OSError as e:
             rospy.logfatal(f'AMR(SettingsHandler) - create file path: Error {e}')
             return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "startup_program_options" in settings:
+                    startup_settings = settings["startup_program_options"]
+                    rospy.logdebug('AMR(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('AMR(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('AMR(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('AMR(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'AMR(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "startup_program_options" in settings:
+                settings["startup_program_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('AMR(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('AMR(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'AMR(SettingsHandler) - update settings: Error detected: {e}')
+
     def save_settings(self, file_path, settings):
         try:
-            with open(file_path, 'w') as file:
-                json.dump(settings, file, indent=4)
-            rospy.logdebug('AMR(SettingsHandler) - sace settings: SUCCESS')
-            return True
+            if self.validate_settings_keys(settings):
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                rospy.logdebug('AMR(SettingsHandler) - save settings: SUCCESS')
+                return True
+            return False
         except OSError as e:
-            rospy.logfatal(f'AMR(SettingsHandler) - save settings error: {e}')
+            rospy.logfatal(f'AMR(SettingsHandler) - save settings: Error: {e}')
             return False
 
-    def validate_settings(self, settings):
-        expected_keys = ["process_options_max_retries",
+    def validate_settings_keys(self, settings):
+        expected_keys = [
+            "process_options_max_retries",
             "process_options_interval",
             "log_action_time",
             "workstates_requests_queue_size",
             "workstates_requests_latch",
             "refresh_rate"]
         if not isinstance(settings, dict):
-            return False, "Setting needs to be dictionary type"
+            return False
         for key in expected_keys:
             if key not in settings:
-                return False, f"Missing expected dictionary key: {key}"
-        return True, "Settings ok!"
+                return False
+        return True
 
 class AMR:
     def __init__(self):
         '''Variables - custom messages'''
         self.workstates_active = workstate_read()
-        self.file_path = 'catkin_ws/src/AMR/settings/startup.json'
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
         self.workstates_requests = workstate_request()
         self.actual_task = task_data()
         self.last_task = task_data()
         self.simple_data = simple_in()
         self.settings_handler = SettingsHandler()
-        if not self.settings_handler.check_file(self.file_path):
-            self.settings_handler.create_file(self.file_path)
+        self.settings = self.settings_handler.load_settings(self.file)
         
         '''Variables - user options'''
-        self.log_action_time = True
-        self.process_options_timeout = 10.0
-        self.process_options_max_retries = 3
-        self.process_options_interval = 1.0
-        self.workstates_requests_queue_size = 1
-        self.workstates_requests_latch = True
-        self.refresh_rate = 10
+        self.process_options_timeout = self.settings['process_options_timeout']
+        self.process_options_max_retries = self.settings['process_options_max_retries']
+        self.process_options_interval = self.settings['process_options_interval']
+        self.log_action_time = self.settings['log_action_time']
+        self.workstates_requests_queue_size = self.settings['workstates_requests_queue_size']
+        self.workstates_requests_latch = self.settings['workstates_requests_latch']
+        self.refresh_rate = self.settings['refresh_rate']
+        rospy.logerr(type(self.refresh_rate))
+        rospy.logwarn(self.refresh_rate)
 
         '''Variables - common'''
         self.package = 'dhi_amr'
