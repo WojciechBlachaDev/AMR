@@ -1,7 +1,79 @@
 #!/usr/bin/env python3
-import rospy, time
+import rospy, time, os, traceback, json
 from std_msgs.msg import Bool
 from dhi_amr.msg import flexi_data_out, sensors_data, commands_forks
+
+
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "forks_options" ,{
+            "max_forks_height": 207,
+            "min_forks_height": 107,
+            "forks_height_tolerance":10,
+            "forks_action_timeout": 15,
+            "forklift_tilt_toleration_axis1": 5,
+            "forklift_tilt_toleration_axis2": 5,
+            "command_publish_queue": 1,
+            "command_publish_latch": True,
+            "action_status_queue": 1,
+            "action_status_latch": True,
+            "log_action_time": True
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('FORKS(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'FORKS(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "forks_options" in settings:
+                    startup_settings = settings["forks_options"]
+                    rospy.logdebug('FORKS(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('FORKS(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('FORKS(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('FORKS(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'FORKS(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "forks_options" in settings:
+                settings["forks_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('FORKS(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('FORKS(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'FORKS(SettingsHandler) - update settings: Error detected: {e}')
+
 
 
 class ForksController:
@@ -9,17 +81,20 @@ class ForksController:
         """ Variables """
 
         """ Options """
-        self.max_forks_height = 207
-        self.min_forks_height = 107
-        self.forks_height_tolerance = 10
-        self.forks_action_timeout = 15
-        self.forklift_tilt_toleration_axis1 = 5
-        self.forklift_tilt_toleration_axis2 = 5
-        self.command_publish_queue = 1
-        self.command_publish_latch = True
-        self.action_status_queue = 1
-        self.action_status_latch = True
-        self.log_action_time = True
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
+        self.max_forks_height = self.settings["max_forks_height"]
+        self.min_forks_height = self.settings["min_forks_height"]
+        self.forks_height_tolerance = self.settings["forks_height_tolerance"]
+        self.forks_action_timeout = self.settings["forks_action_timeout"]
+        self.forklift_tilt_toleration_axis1 = self.settings["forklift_tilt_toleration_axis1"]
+        self.forklift_tilt_toleration_axis2 = self.settings["forklift_tilt_toleration_axis2"]
+        self.command_publish_queue = self.settings["command_publish_queue"]
+        self.command_publish_latch = self.settings["command_publish_latch"]
+        self.action_status_queue = self.settings["action_status_queue"]
+        self.action_status_latch = self.settings["action_status_latch"]
+        self.log_action_time = self.settings["log_action_time"]
 
         """ Custom """
         self.data_safety = flexi_data_out()

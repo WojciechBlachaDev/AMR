@@ -1,20 +1,86 @@
 #!/usr/bin/env python3
-import rospy, requests, json, time, math
+import rospy, requests, json, time, math, os, traceback
 from std_msgs.msg import Bool
 from dhi_amr.msg import visionary_data_out
 
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "visionary_program_options" ,{
+            "visionary_ip_address": '192.168.1.10',
+            "montage_height": 840.0,
+            "montage_offset": 140.0,
+            "data_queue": 1,
+            "data_latch": True,
+            "log_action_time": True
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('Visionary(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'Visionary(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "visionary_program_options" in settings:
+                    startup_settings = settings["visionary_program_options"]
+                    rospy.logdebug('Visionary(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('Visionary(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('Visionary(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('Visionary(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'Visionary(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "visionary_program_options" in settings:
+                settings["visionary_program_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('Visionary(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('Visionary(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'Visionary(SettingsHandler) - update settings: Error detected: {e}')
 
 class VisionaryConnection:
     def __init__(self):
         """ Variables """
-
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
         """ Options """
-        self.visionary_ip_address = '192.168.1.10'
-        self.montage_height = 840.0
-        self.montage_offset = 140.0
-        self.data_queue = 1
-        self.data_latch = True
-        self.log_action_time = True
+        self.visionary_ip_address = self.settings["visionary_ip_address"]
+        self.montage_height = self.settings["montage_height"]
+        self.montage_offset = self.settings["montage_offset"]
+        self.data_queue = self.settings["data_queue"]
+        self.data_latch = self.settings["data_latch"]
+        self.log_action_time = self.settings["log_action_time"]
 
         """ Others """
         self.get_data = False

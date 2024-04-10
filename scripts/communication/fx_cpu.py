@@ -1,9 +1,95 @@
 #!/usr/bin/env python3
-import rospy, time
+import rospy, time, json, traceback, os
 from pyModbusTCP.client import ModbusClient
 from bitstring import BitArray
 from std_msgs.msg import Bool
 from dhi_amr.msg import workstate_read, flexi_data_in, flexi_data_out
+
+
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "fx_program_options" ,{
+            "fx_ip_address": "192.168.1.11",
+            "fx_port": 502,
+            "fx_connection_timeout":0.5,
+            "fx_connection_retry_timeout": 10.0,
+            "refresh_rate": 30,
+            "lidars_reset_retries_count": 2,
+            "data_out_pub_queue": 1,
+            "safety_status_pub_queue": 1,
+            "data_out_pub_latch": True,
+            "safety_status_pub_latch": True,
+            "log_action_times": True,
+            "lidar_reset_time": 3.0,
+            "auto_reset_option": True,
+            "test_mode": False
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('FX_CPU(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'FX_CPU(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "fx_program_options" in settings:
+                    startup_settings = settings["fx_program_options"]
+                    rospy.logdebug('FX_CPU(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('FX_CPU(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('FX_CPU(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('FX_CPU(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'FX_CPU(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "fx_program_options" in settings:
+                settings["fx_program_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('FX_CPU(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('FX_CPU(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'FX_CPU(SettingsHandler) - update settings: Error detected: {e}')
+
+    def save_settings(self, file_path, settings):
+        try:
+            if self.validate_settings_keys(settings):
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                rospy.logdebug('FX_CPU(SettingsHandler) - save settings: SUCCESS')
+                return True
+            return False
+        except OSError as e:
+            rospy.logfatal(f'FX_CPU(SettingsHandler) - save settings: Error: {e}')
+            return False
 
 
 class Communication:
@@ -11,20 +97,23 @@ class Communication:
         """Variables definitions"""
 
         """Options"""
-        self.fx_ip_address = '192.168.1.11'
-        self.fx_port = 502
-        self.fx_connection_timeout = 0.5
-        self.fx_connection_retry_timeout = 10.0
-        self.refresh_rate = 30
-        self.lidars_reset_retries_count = 2
-        self.data_out_pub_queue = 1
-        self.safety_status_pub_queue = 1
-        self.data_out_pub_latch = True
-        self.safety_status_pub_latch = True
-        self.log_action_times = True
-        self.lidar_reset_time = 3.0
-        self.auto_reset_option = True
-        self.test_mode = False
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
+        self.fx_ip_address = self.settings["fx_ip_address"]
+        self.fx_port = self.settings["fx_port"]
+        self.fx_connection_timeout = self.settings["fx_connection_timeout"]
+        self.fx_connection_retry_timeout = self.settings["fx_connection_retry_timeout"]
+        self.refresh_rate = self.settings["refresh_rate"]
+        self.lidars_reset_retries_count = self.settings["lidars_reset_retries_count"]
+        self.data_out_pub_queue = self.settings["data_out_pub_queue"]
+        self.safety_status_pub_queue = self.settings["safety_status_pub_queue"]
+        self.data_out_pub_latch = self.settings["data_out_pub_latch"]
+        self.safety_status_pub_latch = self.settings["safety_status_pub_latch"]
+        self.log_action_times = self.settings["log_action_times"]
+        self.lidar_reset_time = self.settings["lidar_reset_time"]
+        self.auto_reset_option = self.settings["auto_reset_option"]
+        self.test_mode = self.settings["test_mode"]
 
         """Main"""
         self.fx_cpu = ModbusClient()

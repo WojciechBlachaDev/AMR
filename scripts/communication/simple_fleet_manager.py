@@ -1,13 +1,76 @@
 #!/usr/bin/env python3
-import rospy, time, netifaces, signal, math, socket
+import rospy, time, netifaces, math, socket, os, json, traceback
 from geometry_msgs.msg import Pose2D
-from std_msgs.msg import Int64, Float32
 from dhi_amr.msg import simple_in
 from dhi_amr.msg import task_data
 from dhi_amr.msg import simple_confirmations, encoder_data, ethernet_devices_status
 from dhi_amr.msg import flexi_data_out, log_messages, plc_error_codes, plc_error_status
 from dhi_amr.msg import scangrid, sensors_data, task_data, teb_config
 from dhi_amr.msg import visionary_data_out, workstate_read
+
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "simple_fleet_manager_options" ,{
+            "interface_name": "eno1",
+            "server_port": 2137,
+            "server_refresh_rate":30,
+            "data_in_queue": 1,
+            "data_in_latch": True
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('SFM(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'SFM(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "simple_fleet_manager_options" in settings:
+                    startup_settings = settings["simple_fleet_manager_options"]
+                    rospy.logdebug('SFM(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('SFM(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('SFM(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('SFM(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'SFM(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "simple_fleet_manager_options" in settings:
+                settings["simple_fleet_manager_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('SFM(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('SFM(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'SFM(SettingsHandler) - update settings: Error detected: {e}')
 
 
 """ Server setting class """
@@ -45,15 +108,17 @@ class ConnectionHandler:
     def __init__(self):
         """ Variables """
         """ options """
-        self.server_startup = True
-        # self.interface_name = 'wlp0s20f3'
-        self.interface_name = 'eno1'
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
+        self.interface_name = self.settings["fx_ip_address"]
         self.server_address = self.get_my_ip(self.interface_name)
-        self.server_port = 2137
-        self.server_refresh_rate = 30
-        self.data_in_queue = 1
-        self.data_in_latch = True
+        self.server_port = self.settings["server_port"]
+        self.server_refresh_rate = self.settings["server_refresh_rate"]
+        self.data_in_queue = self.settings["data_in_queue"]
+        self.data_in_latch = self.settings["data_in_latch"]
         """ Connection """
+        self.server_startup = True
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server = Server(self.server_address, self.server_port)

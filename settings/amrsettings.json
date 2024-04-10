@@ -25,5 +25,62 @@
         "plc_connection_retry_timeout": 10.0,
         "log_actions_durations": true,
         "refresh_rate": 30
+    },
+    "fx_program_options": {
+        "fx_ip_address": "192.168.1.11",
+        "fx_port": 502,
+        "fx_connection_timeout":0.5,
+        "fx_connection_retry_timeout": 10.0,
+        "refresh_rate": 30,
+        "lidars_reset_retries_count": 2,
+        "data_out_pub_queue": 1,
+        "safety_status_pub_queue": 1,
+        "data_out_pub_latch": true,
+        "safety_status_pub_latch": true,
+        "log_action_times": true,
+        "lidar_reset_time": 3.0,
+        "auto_reset_option": true,
+        "test_mode": false
+    },
+    "visionary_program_options": {
+        "visionary_ip_address": "192.168.1.10",
+        "montage_height": 840.0,
+        "montage_offset": 140.0,
+        "data_queue": 1,
+        "data_latch": true,
+        "log_action_time": true
+    },
+    "simple_fleet_manager_options": {
+        "interface_name": "eno1",
+        "server_port": 2137,
+        "server_refresh_rate":30,
+        "data_in_queue": 1,
+        "data_in_latch": true
+    },
+    "drive_options": {
+        "curtis_min_pwm": 360,
+        "curtis_max_pwm": 3999,
+        "servo_angle_limit":90.0,
+        "auto_correct_command": true,
+        "curtis_queue": 1,
+        "servo_queue": 1,
+        "curtis_latch": true,
+        "servo_latch": true,
+        "log_action_duration": true,
+        "tilt_tolerance_axis1": 5.0,
+        "tilt_tolerance_axis2": 5.0
+    },
+    "forks_options": {
+        "max_forks_height": 207,
+        "min_forks_height": 107,
+        "forks_height_tolerance":10,
+        "forks_action_timeout": 15,
+        "forklift_tilt_toleration_axis1": 5,
+        "forklift_tilt_toleration_axis2": 5,
+        "command_publish_queue": 1,
+        "command_publish_latch": true,
+        "action_status_queue": 1,
+        "action_status_latch": true,
+        "log_action_time": true
     }
 }

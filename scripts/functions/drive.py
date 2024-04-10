@@ -1,7 +1,78 @@
 #!/usr/bin/env python3
-import rospy, math, time
+import rospy, math, time, os, json, traceback
 from std_msgs.msg import Int64, Float32, Bool
 from dhi_amr.msg import commands_curtis, commands_servo, flexi_data_out
+
+
+class SettingsHandler():
+    def __init__(self):
+        self.default_settings = "drive_options" ,{
+            "curtis_min_pwm": 360,
+            "curtis_max_pwm": 3999,
+            "servo_angle_limit":90.0,
+            "auto_correct_command": True,
+            "curtis_queue": 1,
+            "servo_queue": 1,
+            "curtis_latch": True,
+            "servo_latch": True,
+            "log_action_duration": True,
+            "tilt_tolerance_axis1": 5.0,
+            "tilt_tolerance_axis2": 5.0
+        }
+
+    def check_file(self, file_path):
+        return os.path.exists(file_path)
+
+    def create_file(self, file_path):
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                pass
+            rospy.logdebug('DRIVE(SettingsHandler) - create file path: File path created')
+            return True
+        except OSError as e:
+            rospy.logfatal(f'DRIVE(SettingsHandler) - create file path: Error {e}')
+            return False
+
+    def load_settings(self, file_path):
+        try:
+            if self.check_file(file_path):
+                with open(file_path, 'r') as file:
+                    settings = json.load(file)
+                if "drive_options" in settings:
+                    startup_settings = settings["drive_options"]
+                    rospy.logdebug('DRIVE(SettingsHandler) - load settings: SUCCESS')
+                    return startup_settings
+                else:
+                    rospy.logwarn('DRIVE(SettingsHandler) - load settings: startup program options not found. Loading default options and saving to file')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+            else:
+                if self.create_file(file_path):
+                    rospy.logdebug('DRIVE(SettingsHandler) - load settings: settings file not found, creating new one empty file and saving default program settings')
+                    self.update_settings(file_path, self.default_settings)
+                    return self.default_settings
+                else:
+                    rospy.logerr('DRIVE(SettingsHandler) - load settings: Settings file not found. Creating new file failed - please check log and file permissions. Returning program default settings')
+                    return self.default_settings
+        except Exception as e:
+            rospy.logerr(f'DRIVE(SettingsHandler) - load settings: Error detected: {e}')
+            rospy.logerr(traceback.format_exc())  # Dodajemy informacje o śladzie stosu
+            return self.default_settings
+
+    def update_settings(self, file_path, new_settings):
+        try:
+            with open(file_path, 'r') as file:
+                settings = json.load(file)
+            if "drive_options" in settings:
+                settings["drive_options"] = new_settings
+                with open(file_path, 'w') as file:
+                    json.dump(settings, file, indent=4)
+                    rospy.logdebug('DRIVE(SettingsHandler) - update settings: SUCCESS')
+            else:
+                rospy.logwarn('DRIVE(SettingsHandler) - update settings: No startup_program_options section in JSON file')
+        except Exception as e:
+            rospy.logerr(f'DRIVE(SettingsHandler) - update settings: Error detected: {e}')
 
 
 class DriveController:
@@ -9,17 +80,20 @@ class DriveController:
         """Variables"""
 
         """Options"""
-        self.curtis_min_pwm = 360
-        self.curtis_max_pwm = 3999
-        self.servo_angle_limit = 90.0
-        self.auto_correct_command = True
-        self.curtis_queue = 1
-        self.servo_queue = 1
-        self.curtis_latch = True
-        self.servo_latch = True
-        self.log_action_duration = True
-        self.tilt_tolerance_axis1 = 5.0
-        self.tilt_tolerance_axis2 = 5.0
+        self.file = 'catkin_ws/src/AMR/settings/amrsettings.json'
+        self.settings_handler = SettingsHandler()
+        self.settings = self.settings_handler.load_settings(self.file)
+        self.curtis_min_pwm = self.settings["curtis_min_pwm"]
+        self.curtis_max_pwm = self.settings["curtis_max_pwm"]
+        self.servo_angle_limit = self.settings["servo_angle_limit"]
+        self.auto_correct_command = self.settings["auto_correct_command"]
+        self.curtis_queue = self.settings["curtis_queue"]
+        self.servo_queue = self.settings["servo_queue"]
+        self.curtis_latch = self.settings["curtis_latch"]
+        self.servo_latch = self.settings["servo_latch"]
+        self.log_action_duration = self.settings["log_action_duration"]
+        self.tilt_tolerance_axis1 = self.settings["tilt_tolerance_axis1"]
+        self.tilt_tolerance_axis2 = self.settings["tilt_tolerance_axis2"]
 
         """Custom"""
         self.curtis = commands_curtis()
